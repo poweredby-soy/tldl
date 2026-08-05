@@ -148,9 +148,10 @@ export async function rewrite(
       model,
       stream: true,
       usage: { include: true },
-      // Nothing here is worth thinking about: the prompt says exactly what to do,
-      // and thinking is dead air before the first word reaches the screen.
-      reasoning: { enabled: false },
+      // The rewrite translates and compresses, and both need some thinking: with
+      // reasoning off the model leaves the message in the spoken language and at
+      // close to its spoken length. Low buys the prompt back without the stall.
+      reasoning: { effort: 'low' },
       // The rewrite models tend to have a long tail of endpoints at mixed speeds,
       // and the default routing weights price.
       provider: { sort: 'throughput' },

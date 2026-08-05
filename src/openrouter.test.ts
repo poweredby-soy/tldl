@@ -69,12 +69,12 @@ test('hands over each delta as it lands and keeps the cost off the last chunk', 
   assert.equal(result.cost, 0.0004);
 });
 
-test('asks for no thinking and for the fastest endpoint', async () => {
+test('asks for little thinking and for the fastest endpoint', async () => {
   const sent = respondWith([contentEvent('I found her alone.'), 'data: [DONE]\n']);
   await rewrite('a transcript', 'key', 'a/model', () => {});
 
   assert.equal(sent.body?.stream, true);
-  assert.deepEqual(sent.body?.reasoning, { enabled: false });
+  assert.deepEqual(sent.body?.reasoning, { effort: 'low' });
   assert.deepEqual(sent.body?.provider, { sort: 'throughput' });
 });
 
