@@ -43,7 +43,7 @@ function showWorking(step: string, detail = ''): void {
 function showResultControls(visible: boolean): void {
   el('result-actions').hidden = !visible;
   el('result-original').hidden = !visible;
-  el('result-cost').hidden = !visible;
+  el('result-stats').hidden = !visible;
 }
 
 function showStreaming(transcript: string): void {
@@ -56,6 +56,7 @@ function showStreaming(transcript: string): void {
 function showResult(message: string, transcript: string, cost: number): void {
   el('result-text').textContent = message;
   el('result-transcript').textContent = transcript;
+  el('result-reduction').textContent = describeReduction(message, transcript);
   el('result-meta').textContent = `$${cost.toFixed(4)}`;
   showResultControls(true);
   show('result');
@@ -84,6 +85,22 @@ function describeError(error: unknown): string {
 
 function describeSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** A rewrite can come out longer than the transcript, so say which way it went. */
+function describeReduction(message: string, transcript: string): string {
+  const change = 1 - message.length / transcript.length;
+  const percent = Math.round(Math.abs(change) * 100);
+
+  if (percent === 0) {
+    return 'Same length';
+  }
+
+  if (change < 0) {
+    return `${percent}% longer`;
+  }
+
+  return `${percent}% shorter`;
 }
 
 async function run(audio: Blob, filename: string): Promise<void> {
