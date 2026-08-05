@@ -14,7 +14,7 @@ A static site, a service worker, and two calls to OpenRouter.
 2. The service worker intercepts that POST, because a static host cannot accept one. It parks the file in a Cache and redirects to `/`.
 3. The app collects the file on boot, drops it from the cache so a reload cannot reprocess it, and base64-encodes it.
 4. `POST /api/v1/audio/transcriptions` returns the transcript, in whatever language was spoken.
-5. `POST /api/v1/chat/completions` rewrites the transcript in the speaker's voice, in English, keeping their order and their points. It streams, so the message writes itself onto the screen instead of landing all at once at the end. The copy button, the transcript and the cost appear once it is whole.
+5. `POST /api/v1/chat/completions` rewrites the transcript in the speaker's voice, in the language picked in Settings, keeping their order and their points. It streams, so the message writes itself onto the screen instead of landing all at once at the end. The copy button, the transcript and the cost appear once it is whole.
 
 WhatsApp voice notes are Opus inside an Ogg container. OpenRouter has no `opus` format, so they go up as `ogg` and the provider decodes the codec. The Android share sheet is unreliable about MIME types, so `src/audio.ts` trusts the filename extension first.
 

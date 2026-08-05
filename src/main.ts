@@ -1,5 +1,11 @@
 import './style.css';
-import { loadSettings, saveSettings } from './settings.ts';
+import {
+  DEFAULT_LANGUAGE,
+  isLanguage,
+  loadSettings,
+  saveSettings,
+  type Language,
+} from './settings.ts';
 import { takeSharedAudio } from './share.ts';
 import { OpenRouterError, rewrite, transcribe } from './openrouter.ts';
 
@@ -110,6 +116,7 @@ async function run(audio: Blob, filename: string): Promise<void> {
       transcription.text,
       settings.apiKey,
       settings.rewriteModel,
+      settings.outputLanguage,
       (delta) => {
         if (!started) {
           started = true;
@@ -136,9 +143,30 @@ function setHint(text: string): void {
   hint.hidden = !text;
 }
 
+function languageButtons(): HTMLButtonElement[] {
+  return [...el('output-language').querySelectorAll<HTMLButtonElement>('[data-language]')];
+}
+
+/** The pressed button holds the choice, so the group needs no state beside the DOM. */
+function showLanguage(language: Language): void {
+  for (const button of languageButtons()) {
+    button.setAttribute('aria-pressed', String(button.dataset.language === language));
+  }
+}
+
+function chosenLanguage(): Language {
+  const pressed = languageButtons().find(
+    (button) => button.getAttribute('aria-pressed') === 'true',
+  );
+  const language = pressed?.dataset.language;
+
+  return isLanguage(language) ? language : DEFAULT_LANGUAGE;
+}
+
 function openSettings(hint = ''): void {
   const settings = loadSettings();
   el<HTMLInputElement>('api-key').value = settings.apiKey;
+  showLanguage(settings.outputLanguage);
   el<HTMLInputElement>('transcribe-model').value = settings.transcribeModel;
   el<HTMLInputElement>('rewrite-model').value = settings.rewriteModel;
   el('settings-saved').hidden = true;
@@ -154,12 +182,22 @@ function showIdle(hint = ''): void {
 function wireUp(): void {
   el('open-settings').addEventListener('click', () => openSettings());
 
+  for (const button of languageButtons()) {
+    button.addEventListener('click', () => {
+      const language = button.dataset.language;
+      if (isLanguage(language)) {
+        showLanguage(language);
+      }
+    });
+  }
+
   el('save-settings').addEventListener('click', () => {
     const apiKey = el<HTMLInputElement>('api-key').value.trim();
     saveSettings({
       apiKey,
       transcribeModel: el<HTMLInputElement>('transcribe-model').value.trim(),
       rewriteModel: el<HTMLInputElement>('rewrite-model').value.trim(),
+      outputLanguage: chosenLanguage(),
     });
 
     if (!apiKey) {

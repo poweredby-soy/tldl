@@ -61,7 +61,9 @@ test('hands over each delta as it lands and keeps the cost off the last chunk', 
   ]);
 
   const deltas: string[] = [];
-  const result = await rewrite('a transcript', 'key', 'a/model', (delta) => deltas.push(delta));
+  const result = await rewrite('a transcript', 'key', 'a/model', 'en', (delta) =>
+    deltas.push(delta),
+  );
 
   // The leading blank line the model opened with never reaches the screen.
   assert.deepEqual(deltas, ['I found', ' her alone.']);
@@ -71,11 +73,20 @@ test('hands over each delta as it lands and keeps the cost off the last chunk', 
 
 test('asks for little thinking and for the fastest endpoint', async () => {
   const sent = respondWith([contentEvent('I found her alone.'), 'data: [DONE]\n']);
-  await rewrite('a transcript', 'key', 'a/model', () => {});
+  await rewrite('a transcript', 'key', 'a/model', 'en', () => {});
 
   assert.equal(sent.body?.stream, true);
   assert.deepEqual(sent.body?.reasoning, { effort: 'low' });
   assert.deepEqual(sent.body?.provider, { sort: 'throughput' });
+});
+
+test('sends the system prompt in the language settings asked for', async () => {
+  const sent = respondWith([contentEvent('Ich habe sie allein gefunden.'), 'data: [DONE]\n']);
+  await rewrite('a transcript', 'key', 'a/model', 'de', () => {});
+
+  const messages = sent.body?.messages as { role: string; content: string }[];
+
+  assert.match(messages[0].content, /Always write in German/);
 });
 
 test('raises an error the stream reports after it has already started', async () => {
@@ -84,7 +95,7 @@ test('raises an error the stream reports after it has already started', async ()
     `data: ${JSON.stringify({ error: { message: 'upstream died', code: 502 } })}\n`,
   ]);
 
-  await assert.rejects(() => rewrite('a transcript', 'key', 'a/model', () => {}), {
+  await assert.rejects(() => rewrite('a transcript', 'key', 'a/model', 'en', () => {}), {
     message: 'upstream died',
     status: 502,
   });

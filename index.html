@@ -200,6 +200,38 @@
           </div>
 
           <div>
+            <span id="output-language-label" class="block text-base/7 font-medium sm:text-sm/6"
+              >Output language</span
+            >
+            <div
+              id="output-language"
+              role="group"
+              aria-labelledby="output-language-label"
+              class="mt-1.5 inline-flex gap-1 rounded-lg bg-taupe-100 p-1 dark:bg-white/5"
+            >
+              <button
+                type="button"
+                data-language="en"
+                aria-pressed="true"
+                class="rounded-md px-3 py-1.5 text-base/6 font-medium text-taupe-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:text-sm/6 aria-pressed:bg-white aria-pressed:text-taupe-950 aria-pressed:shadow-sm dark:text-taupe-400 dark:aria-pressed:bg-white/10 dark:aria-pressed:text-white"
+              >
+                English
+              </button>
+              <button
+                type="button"
+                data-language="de"
+                aria-pressed="false"
+                class="rounded-md px-3 py-1.5 text-base/6 font-medium text-taupe-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:text-sm/6 aria-pressed:bg-white aria-pressed:text-taupe-950 aria-pressed:shadow-sm dark:text-taupe-400 dark:aria-pressed:bg-white/10 dark:aria-pressed:text-white"
+              >
+                German
+              </button>
+            </div>
+            <p class="mt-2 text-base/6 text-pretty text-taupe-500 sm:text-sm/6 dark:text-taupe-400">
+              The rewrite lands in this language, whatever was spoken.
+            </p>
+          </div>
+
+          <div>
             <label for="transcribe-model" class="block text-base/7 font-medium sm:text-sm/6"
               >Transcription model</label
             >

@@ -1,5 +1,6 @@
 import { detectFormat, toBase64 } from './audio.ts';
-import { REWRITE_SYSTEM_PROMPT, rewriteUserPrompt } from './prompt.ts';
+import { rewriteSystemPrompt, rewriteUserPrompt } from './prompt.ts';
+import type { Language } from './settings.ts';
 
 const BASE_URL = 'https://openrouter.ai/api/v1';
 
@@ -139,6 +140,7 @@ export async function rewrite(
   transcript: string,
   apiKey: string,
   model: string,
+  language: Language,
   onDelta: (delta: string) => void,
 ): Promise<Rewrite> {
   const response = await fetch(`${BASE_URL}/chat/completions`, {
@@ -156,7 +158,7 @@ export async function rewrite(
       // and the default routing weights price.
       provider: { sort: 'throughput' },
       messages: [
-        { role: 'system', content: REWRITE_SYSTEM_PROMPT },
+        { role: 'system', content: rewriteSystemPrompt(language) },
         { role: 'user', content: rewriteUserPrompt(transcript) },
       ],
     }),
