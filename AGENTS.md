@@ -1,6 +1,6 @@
 # tldl
 
-The repo is named `transcriber`; the app is `tldl`. A PWA that turns a shared WhatsApp voice message into the message the sender would have written. See `README.md` for what it does and how to run it.
+A PWA that turns a shared WhatsApp voice message into the message the sender would have written. See `README.md` for what it does and how to run it.
 
 ## Shape
 
@@ -40,7 +40,7 @@ Bugs get a failing test before a fix.
 
 ### Issue tracker
 
-Issues and specs live as GitHub issues on `rubenvanerk/transcriber`, driven via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues and specs live as GitHub issues on `rubenvanerk/tldl`, driven via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
