@@ -5,10 +5,14 @@ import { rewrite, takeEvents } from './openrouter.ts';
 // The request headers carry the origin, which only a browser has.
 Object.defineProperty(globalThis, 'location', { value: { origin: 'https://tldl.test' } });
 
-/** Answers the next fetch with an SSE body delivered in the given pieces. */
-function respondWith(pieces: string[]): void {
-  globalThis.fetch = () =>
-    Promise.resolve(
+/** Answers the next fetch with an SSE body in the given pieces, and keeps what was asked for. */
+function respondWith(pieces: string[]): { body?: Record<string, unknown> } {
+  const sent: { body?: Record<string, unknown> } = {};
+
+  globalThis.fetch = (_input, init) => {
+    sent.body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+
+    return Promise.resolve(
       new Response(
         new ReadableStream({
           start(controller) {
@@ -20,6 +24,9 @@ function respondWith(pieces: string[]): void {
         }),
       ),
     );
+  };
+
+  return sent;
 }
 
 function contentEvent(content: string): string {
@@ -60,6 +67,15 @@ test('hands over each delta as it lands and keeps the cost off the last chunk', 
   assert.deepEqual(deltas, ['I found', ' her alone.']);
   assert.equal(result.text, 'I found her alone.');
   assert.equal(result.cost, 0.0004);
+});
+
+test('asks for no thinking and for the fastest endpoint', async () => {
+  const sent = respondWith([contentEvent('I found her alone.'), 'data: [DONE]\n']);
+  await rewrite('a transcript', 'key', 'a/model', () => {});
+
+  assert.equal(sent.body?.stream, true);
+  assert.deepEqual(sent.body?.reasoning, { enabled: false });
+  assert.deepEqual(sent.body?.provider, { sort: 'throughput' });
 });
 
 test('raises an error the stream reports after it has already started', async () => {

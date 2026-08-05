@@ -45,6 +45,8 @@ Around $0.014 for a seven-minute message, of which roughly 96% is transcription.
 
 Defaults are `openai/whisper-large-v3` and `deepseek/deepseek-v4-flash`, both overridable in Settings. deepseek was picked over Claude Sonnet 5 and Gemini 3.6 Flash on a real message: it kept the speaker's order and facts, compressed hardest, and cost a fraction as much.
 
+The rewrite asks for no reasoning and for provider routing sorted by throughput. A fully specified rewrite has nothing to reason about, and thinking is dead air before the first word reaches the screen. The rewrite models carry a long tail of endpoints at mixed speeds, and the default routing weights price. Sort by `latency` instead if time to the first word matters more than time to the last.
+
 ## Commands
 
 ```
