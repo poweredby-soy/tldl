@@ -7,7 +7,7 @@ import {
   type Language,
 } from './settings.ts';
 import { takeSharedAudio } from './share.ts';
-import { OpenRouterError, rewrite, transcribe } from './openrouter.ts';
+import { OpenRouterError, rewrite, transcribe, type Transcription } from './openrouter.ts';
 
 type View = 'idle' | 'working' | 'result' | 'error' | 'settings';
 
@@ -53,13 +53,23 @@ function showStreaming(transcript: string): void {
   show('result');
 }
 
-function showResult(message: string, transcript: string, cost: number): void {
+function showResult(message: string, transcription: Transcription, cost: number): void {
   el('result-text').textContent = message;
-  el('result-transcript').textContent = transcript;
-  el('result-reduction').textContent = describeReduction(message, transcript);
+  el('result-transcript').textContent = transcription.text;
+  el('result-reduction').textContent = describeReduction(message, transcription.text);
   el('result-meta').textContent = `$${cost.toFixed(4)}`;
+  showSpoken(transcription.duration);
   showResultControls(true);
   show('result');
+}
+
+/** Not every transcription endpoint reports a duration, so the stat comes and goes. */
+function showSpoken(duration?: number): void {
+  const known = typeof duration === 'number' && duration > 0;
+
+  el('result-spoken').textContent = known ? describeSpoken(duration) : '';
+  el('result-spoken').hidden = !known;
+  el('result-spoken-separator').hidden = !known;
 }
 
 function showError(error: unknown): void {
@@ -85,6 +95,19 @@ function describeError(error: unknown): string {
 
 function describeSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** How long the sender talked, which is the whole reason this app exists. */
+function describeSpoken(seconds: number): string {
+  const total = Math.round(seconds);
+  const minutes = Math.floor(total / 60);
+  const rest = total % 60;
+
+  if (!minutes) {
+    return `${rest}s spoken`;
+  }
+
+  return `${minutes}m ${String(rest).padStart(2, '0')}s spoken`;
 }
 
 /** A rewrite can come out longer than the transcript, so say which way it went. */
@@ -130,7 +153,7 @@ async function run(audio: Blob, filename: string): Promise<void> {
     let started = false;
 
     const rewritten = await rewrite(
-      transcription.text,
+      transcription,
       settings.apiKey,
       settings.rewriteModel,
       settings.outputLanguage,
@@ -143,11 +166,7 @@ async function run(audio: Blob, filename: string): Promise<void> {
       },
     );
 
-    showResult(
-      rewritten.text,
-      transcription.text,
-      transcription.cost + rewritten.cost,
-    );
+    showResult(rewritten.text, transcription, transcription.cost + rewritten.cost);
   } catch (error) {
     showError(error);
   }

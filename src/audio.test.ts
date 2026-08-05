@@ -1,7 +1,6 @@
 import { strict as assert } from 'node:assert';
-import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { detectFormat, toBase64 } from './audio.ts';
+import { detectFormat, toUpload } from './audio.ts';
 
 test('reads the container before the codec', () => {
   // MediaRecorder in Chrome produces Opus inside WebM, not inside Ogg.
@@ -27,11 +26,20 @@ test('falls back to ogg when nothing identifies the audio', () => {
   assert.equal(detectFormat('application/octet-stream', 'no-extension-at-all'), 'ogg');
 });
 
-test('encodes bytes identically to a reference base64 encoder', async () => {
-  // Exercises the chunked encoder on a payload big enough to blow the argument
-  // limit if String.fromCharCode were handed the whole buffer at once.
-  const bytes = readFileSync(new URL('./audio.test.ts', import.meta.url));
-  const padded = Buffer.concat(Array.from({ length: 64 }, () => bytes));
+test('uploads a WhatsApp voice note under a name and a type the endpoint reads', () => {
+  // The endpoint has no `opus`, so Opus-in-Ogg goes up as the Ogg it is.
+  const upload = toUpload(
+    new Blob(['bytes'], { type: 'application/octet-stream' }),
+    'AUD-20260805-WA0001.opus',
+  );
 
-  assert.equal(await toBase64(new Blob([padded])), padded.toString('base64'));
+  assert.equal(upload.name, 'voice.ogg');
+  assert.equal(upload.type, 'audio/ogg');
+});
+
+test('keeps the bytes it was handed', async () => {
+  const upload = toUpload(new Blob(['the original bytes']), 'voice.m4a');
+
+  assert.equal(upload.type, 'audio/mp4');
+  assert.equal(await upload.text(), 'the original bytes');
 });

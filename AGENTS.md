@@ -14,7 +14,7 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 | `public/manifest.webmanifest` | `share_target` declaration. Both MIME types and extensions in `accept`, or Android shows the app and then delivers nothing. |
 | `src/share.ts` | Collects the parked file, destructively. |
 | `src/openrouter.ts` | Both API calls. |
-| `src/audio.ts` | Base64 and format detection. |
+| `src/audio.ts` | Format detection, and shaping the upload the endpoint reads it off. |
 | `src/prompt.ts` | The rewrite prompt. Where output quality actually lives. |
 | `src/main.ts` | View switching and wiring. |
 | `index.html` | Every view's markup and all of the styling. |
@@ -23,7 +23,8 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 
 - **No backend, and it should stay that way.** OpenRouter sends `access-control-allow-origin: *` and allows `Authorization`, so the browser calls it directly. Verified, not assumed.
 - **The API key is in `localStorage` by design.** Single user, own device, own origin. Do not add a proxy or a server-side key store without asking.
-- **Opus goes up as `ogg`.** OpenRouter has no `opus` format. Do not add a client-side transcode; the provider decodes the codec.
+- **Opus goes up as `ogg`.** OpenRouter has no `opus` format. `toUpload` renames the file and restates its type so the endpoint reads a container it knows. Do not add a client-side transcode; the provider decodes the codec.
+- **The audio travels as `multipart/form-data`.** Not base64 in a JSON body. The form takes only `file`, `model`, `language`, `temperature`, `response_format` and `timestamp_granularities`, so a nested `provider` object cannot ride along; provider routing on that call has to go through the model slug.
 - **The share sheet lies about MIME types.** `detectFormat` trusts the filename extension before the reported type, and falls back to `ogg`. Both behaviours are tested.
 - **The origin is fixed.** Changing hostnames forces a reinstall of the PWA.
 

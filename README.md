@@ -12,11 +12,11 @@ A static site, a service worker, and two calls to OpenRouter.
 
 1. The share sheet POSTs the audio to `/share` as `multipart/form-data`.
 2. The service worker intercepts that POST, because a static host cannot accept one. It parks the file in a Cache and redirects to `/`.
-3. The app collects the file on boot, drops it from the cache so a reload cannot reprocess it, and base64-encodes it.
-4. `POST /api/v1/audio/transcriptions` returns the transcript, in whatever language was spoken.
+3. The app collects the file on boot and drops it from the cache so a reload cannot reprocess it.
+4. `POST /api/v1/audio/transcriptions` returns the transcript, in whatever language was spoken. The audio goes up as `multipart/form-data`, so the bytes travel as bytes. Asking for `verbose_json` also buys the duration, shown under the result, and the language that was heard, which the rewrite prompt then names instead of inferring.
 5. `POST /api/v1/chat/completions` rewrites the transcript in the speaker's voice, in the language picked in Settings, keeping their order and their points. It streams, so the message writes itself onto the screen instead of landing all at once at the end. The copy button, the transcript and the cost appear once it is whole.
 
-WhatsApp voice notes are Opus inside an Ogg container. OpenRouter has no `opus` format, so they go up as `ogg` and the provider decodes the codec. The Android share sheet is unreliable about MIME types, so `src/audio.ts` trusts the filename extension first.
+WhatsApp voice notes are Opus inside an Ogg container. OpenRouter has no `opus` format, so they go up under an `.ogg` name and an `audio/ogg` type and the provider decodes the codec. The Android share sheet is unreliable about MIME types, so `src/audio.ts` trusts the filename extension first.
 
 ## Setup
 
@@ -43,7 +43,9 @@ The origin must stay fixed. Changing hostnames means uninstalling and reinstalli
 
 Around $0.014 for a seven-minute message, of which roughly 96% is transcription. A typical one or two minute message is well under half a cent. Every response reports its real cost, shown under the result.
 
-Defaults are `openai/whisper-large-v3` and `deepseek/deepseek-v4-flash`, both overridable in Settings. deepseek was picked over Claude Sonnet 5 and Gemini 3.6 Flash on a real message: it kept the speaker's order and facts, compressed hardest, and cost a fraction as much.
+Defaults are `openai/whisper-large-v3` and `deepseek/deepseek-v4-flash`, both overridable in Settings. deepseek was picked over Claude Sonnet 5 and Gemini 3.6 Flash on a real message: it kept the speaker's order and facts, compressed hardest, and cost a fraction as much. Gemini 3.6 Flash stayed on as the model the rewrite falls back to when every endpoint of the chosen one is down.
+
+Transcription goes up as `:nitro`, the shorthand for sorting providers by throughput, because it is most of both the bill and the wait and the default routing weights price. It decides `verbose_json` too: whisper-large-v3 answers it on Groq and ignores it on Together, so the duration and the language ride on landing there. A slug that already names a variant in Settings keeps the one it names.
 
 The rewrite asks for `low` reasoning effort and for provider routing sorted by throughput. Thinking is dead air before the first word reaches the screen, but turning it off entirely costs the prompt: the message comes back in the language it was spoken and at close to its spoken length. Low is the middle that keeps both.
 

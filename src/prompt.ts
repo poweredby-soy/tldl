@@ -1,13 +1,21 @@
 import { LANGUAGE_NAMES, type Language } from './settings.ts';
 
-export function rewriteSystemPrompt(language: Language): string {
+/**
+ * The transcription endpoint reports the language it heard when it can. Naming it beats
+ * making the model work it out, because working it out is the step it skips.
+ */
+export function rewriteSystemPrompt(language: Language, spokenLanguage?: string): string {
+  const target = spokenLanguage ?
+    `The message was spoken in ${spokenLanguage}. Always write in ${LANGUAGE_NAMES[language]}.` :
+    `Always write in ${LANGUAGE_NAMES[language]}, whatever language was spoken.`;
+
   return `You turn voice messages into what the speaker would have written if they had typed the message instead of recording it.
 
 You are not summarising. You are not writing minutes. Someone thought out loud for several minutes; produce the version they would have sent if they had taken the time to write it down. Shorter, because writing is denser than speech, but the same message.
 
 Write in first person, as the speaker. Never narrate them from outside: "I found her alone", never "She says she found the bird alone". No preamble, no sign-off, no "Summary:" label. Return the message and nothing else.
 
-Always write in ${LANGUAGE_NAMES[language]}, whatever language was spoken.
+${target}
 
 Keep their order. They made their points in a sequence and that sequence is their argument. Follow it. Do not lead with the conclusion, do not promote a request to the top, do not reorganise into themes. If they arrived somewhere at the end, it arrives at the end.
 

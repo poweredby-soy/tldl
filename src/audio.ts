@@ -1,4 +1,4 @@
-/** Formats the OpenRouter transcription endpoint accepts for `input_audio.format`. */
+/** Containers the OpenRouter transcription endpoint reads. */
 const SUPPORTED_FORMATS = ['wav', 'mp3', 'flac', 'm4a', 'ogg', 'webm', 'aac'] as const;
 
 export type AudioFormat = (typeof SUPPORTED_FORMATS)[number];
@@ -45,19 +45,23 @@ export function detectFormat(mimeType: string, filename: string): AudioFormat {
   return 'ogg';
 }
 
+const MIME_TYPES: Record<AudioFormat, string> = {
+  wav: 'audio/wav',
+  mp3: 'audio/mpeg',
+  flac: 'audio/flac',
+  m4a: 'audio/mp4',
+  ogg: 'audio/ogg',
+  webm: 'audio/webm',
+  aac: 'audio/aac',
+};
+
 /**
- * `input_audio.data` wants bare base64, no data URI prefix. Encoding runs in chunks
- * because spreading a whole multi-megabyte file into String.fromCharCode blows the
- * argument limit.
+ * The endpoint reads the container off the upload itself, so the audio goes up under
+ * a name and a type it knows rather than the `.opus` and the `application/octet-stream`
+ * the share sheet handed over. Re-wrapping is a view over the same bytes, not a copy.
  */
-export async function toBase64(blob: Blob): Promise<string> {
-  const bytes = new Uint8Array(await blob.arrayBuffer());
-  const CHUNK = 0x8000;
-  let binary = '';
+export function toUpload(audio: Blob, filename: string): File {
+  const format = detectFormat(audio.type, filename);
 
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-  }
-
-  return btoa(binary);
+  return new File([audio], `voice.${format}`, { type: MIME_TYPES[format] });
 }

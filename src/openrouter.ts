@@ -1,8 +1,11 @@
-import { detectFormat, toBase64 } from './audio.ts';
+import { toUpload } from './audio.ts';
 import { rewriteSystemPrompt, rewriteUserPrompt } from './prompt.ts';
 import type { Language } from './settings.ts';
 
 const BASE_URL = 'https://openrouter.ai/api/v1';
+
+/** Where the rewrite goes when every endpoint of the chosen model is down. */
+const SECOND_CHOICE_REWRITE_MODEL = 'google/gemini-3.6-flash';
 
 /** Assigns `status` by hand: `node --test` strips types, it does not compile parameter properties. */
 export class OpenRouterError extends Error {
@@ -15,10 +18,10 @@ export class OpenRouterError extends Error {
   }
 }
 
-function headers(apiKey: string): HeadersInit {
+/** No `Content-Type`: a multipart body has to set its own, boundary and all. */
+function headers(apiKey: string): Record<string, string> {
   return {
     Authorization: `Bearer ${apiKey}`,
-    'Content-Type': 'application/json',
     'HTTP-Referer': location.origin,
     'X-Title': 'tldl',
   };
@@ -43,7 +46,33 @@ async function failure(response: Response): Promise<OpenRouterError> {
 export type Transcription = {
   text: string;
   cost: number;
+  /** Both absent unless the endpoint that served the request reported them. */
+  spokenLanguage?: string;
+  duration?: number;
 };
+
+/**
+ * `:nitro` is the shorthand for `provider.sort: 'throughput'`, which a multipart body
+ * cannot carry as a nested field. Transcription is most of both the bill and the wait,
+ * and the default routing weights price, so the slow endpoint wins by default. It also
+ * decides `verbose_json`: whisper-large-v3 answers it on Groq and ignores it on Together.
+ *
+ * A slug that already names a variant, `:free` or `:floor` or anything else, keeps it.
+ */
+function fastest(model: string): string {
+  return model.includes(':') ? model : `${model}:nitro`;
+}
+
+/** Endpoints disagree on the shape: some answer `nl`, some `dutch`. */
+function spokenLanguage(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const name = value.trim();
+
+  return /^[a-z-]{2,20}$/i.test(name) ? name : undefined;
+}
 
 export async function transcribe(
   audio: Blob,
@@ -51,16 +80,17 @@ export async function transcribe(
   apiKey: string,
   model: string,
 ): Promise<Transcription> {
+  const form = new FormData();
+  form.append('model', fastest(model));
+  form.append('file', toUpload(audio, filename));
+  // Buys the spoken language, which the rewrite prompt would otherwise have to infer,
+  // and the duration, which is the number this app is named after.
+  form.append('response_format', 'verbose_json');
+
   const response = await fetch(`${BASE_URL}/audio/transcriptions`, {
     method: 'POST',
     headers: headers(apiKey),
-    body: JSON.stringify({
-      model,
-      input_audio: {
-        data: await toBase64(audio),
-        format: detectFormat(audio.type, filename),
-      },
-    }),
+    body: form,
   });
 
   if (!response.ok) {
@@ -69,12 +99,16 @@ export async function transcribe(
 
   const result = (await response.json()) as {
     text?: string;
+    language?: unknown;
+    duration?: number;
     usage?: { cost?: number };
   };
 
   return {
     text: result.text?.trim() ?? '',
     cost: result.usage?.cost ?? 0,
+    spokenLanguage: spokenLanguage(result.language),
+    duration: result.duration,
   };
 }
 
@@ -137,7 +171,7 @@ type Chunk = {
 };
 
 export async function rewrite(
-  transcript: string,
+  transcription: Transcription,
   apiKey: string,
   model: string,
   language: Language,
@@ -145,9 +179,13 @@ export async function rewrite(
 ): Promise<Rewrite> {
   const response = await fetch(`${BASE_URL}/chat/completions`, {
     method: 'POST',
-    headers: headers(apiKey),
+    headers: { ...headers(apiKey), 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model,
+      // Every endpoint of one model can be down at once, and this runs with the phone
+      // already in hand. Second choice beats an error screen.
+      models: [...new Set([model, SECOND_CHOICE_REWRITE_MODEL])],
+      route: 'fallback',
       stream: true,
       usage: { include: true },
       // The rewrite translates and compresses, and both need some thinking: with
@@ -158,8 +196,11 @@ export async function rewrite(
       // and the default routing weights price.
       provider: { sort: 'throughput' },
       messages: [
-        { role: 'system', content: rewriteSystemPrompt(language) },
-        { role: 'user', content: rewriteUserPrompt(transcript) },
+        {
+          role: 'system',
+          content: rewriteSystemPrompt(language, transcription.spokenLanguage),
+        },
+        { role: 'user', content: rewriteUserPrompt(transcription.text) },
       ],
     }),
   });
