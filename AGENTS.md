@@ -4,7 +4,9 @@ A PWA that turns a shared WhatsApp voice message into the message the sender wou
 
 ## Shape
 
-Vite + TypeScript + vanilla DOM. Tailwind is installed but unused: the markup is deliberately classless, pending a design pass. No framework, no router, no backend.
+Vite + TypeScript + vanilla DOM. Tailwind v4, with the theme in `src/style.css`. No framework, no router, no backend.
+
+The neutral is `taupe-*` and there is no accent hue; the only colours outside that ramp are the blue focus ring and the red error icon. Light and dark both follow `prefers-color-scheme`. Inter is loaded from `rsms.me`, so the type falls back to the system sans when offline.
 
 | File | Holds |
 | --- | --- |
@@ -15,6 +17,7 @@ Vite + TypeScript + vanilla DOM. Tailwind is installed but unused: the markup is
 | `src/audio.ts` | Base64 and format detection. |
 | `src/prompt.ts` | The rewrite prompt. Where output quality actually lives. |
 | `src/main.ts` | View switching and wiring. |
+| `index.html` | Every view's markup and all of the styling. |
 
 ## Constraints that are load-bearing
 

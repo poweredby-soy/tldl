@@ -155,11 +155,11 @@ function wireUp(): void {
   });
 
   el('copy').addEventListener('click', async () => {
-    const button = el('copy');
+    const label = el('copy-label');
     await navigator.clipboard.writeText(el('result-text').textContent ?? '');
-    button.textContent = 'Copied';
+    label.textContent = 'Copied';
     setTimeout(() => {
-      button.textContent = 'Copy';
+      label.textContent = 'Copy';
     }, 1500);
   });
 

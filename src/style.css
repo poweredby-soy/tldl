@@ -1,1 +1,13 @@
 @import 'tailwindcss';
+
+@theme {
+  --font-sans: 'InterVariable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans--font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+@layer base {
+  /* Inter ships a Display optical size that activates on its own at larger sizes. */
+  html {
+    font-optical-sizing: auto;
+  }
+}
