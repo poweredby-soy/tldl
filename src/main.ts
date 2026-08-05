@@ -33,10 +33,25 @@ function showWorking(step: string, detail = ''): void {
   show('working');
 }
 
+/** Everything around the message waits until the message is whole. */
+function showResultControls(visible: boolean): void {
+  el('result-actions').hidden = !visible;
+  el('result-original').hidden = !visible;
+  el('result-cost').hidden = !visible;
+}
+
+function showStreaming(transcript: string): void {
+  el('result-text').textContent = '';
+  el('result-transcript').textContent = transcript;
+  showResultControls(false);
+  show('result');
+}
+
 function showResult(message: string, transcript: string, cost: number): void {
   el('result-text').textContent = message;
   el('result-transcript').textContent = transcript;
   el('result-meta').textContent = `$${cost.toFixed(4)}`;
+  showResultControls(true);
   show('result');
 }
 
@@ -87,10 +102,21 @@ async function run(audio: Blob, filename: string): Promise<void> {
     }
 
     showWorking('Rewriting', `${transcription.text.length} characters`);
+
+    const message = el('result-text');
+    let started = false;
+
     const rewritten = await rewrite(
       transcription.text,
       settings.apiKey,
       settings.rewriteModel,
+      (delta) => {
+        if (!started) {
+          started = true;
+          showStreaming(transcription.text);
+        }
+        message.textContent += delta;
+      },
     );
 
     showResult(

@@ -89,7 +89,7 @@
       <section id="view-result" hidden>
         <p id="result-text" class="max-w-[65ch] text-base/7 whitespace-pre-wrap text-pretty"></p>
 
-        <div class="mt-6 flex flex-wrap items-center gap-3">
+        <div id="result-actions" class="mt-6 flex flex-wrap items-center gap-3">
           <button
             id="copy"
             type="button"
@@ -120,7 +120,10 @@
           </button>
         </div>
 
-        <details class="group mt-8 border-t border-taupe-950/10 pt-4 dark:border-white/10">
+        <details
+          id="result-original"
+          class="group mt-8 border-t border-taupe-950/10 pt-4 dark:border-white/10"
+        >
           <summary
             class="flex cursor-pointer list-none items-center gap-2 text-base/6 font-medium sm:text-sm/6 [&::-webkit-details-marker]:hidden"
           >
@@ -144,6 +147,7 @@
         </details>
 
         <p
+          id="result-cost"
           class="mt-6 text-base/6 tabular-nums text-taupe-500 sm:text-sm/6 dark:text-taupe-400"
         >
           Cost <span id="result-meta"></span>
