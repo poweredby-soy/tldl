@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <title>tldl</title>
+  </head>
+  <body>
+    <h1>tldl</h1>
+    <button id="open-settings">Settings</button>
+    <p id="hint" hidden></p>
+
+    <section id="view-idle" hidden>
+      <p>Share a voice message from WhatsApp, or pick a file.</p>
+      <input id="file-input" type="file" accept="audio/*,.opus,.ogg,.m4a,.mp3" />
+    </section>
+
+    <section id="view-working" hidden>
+      <p id="working-step"></p>
+      <p id="working-detail"></p>
+    </section>
+
+    <section id="view-result" hidden>
+      <p id="result-text"></p>
+      <button id="copy">Copy</button>
+      <button id="again">New</button>
+      <details>
+        <summary>Original transcript</summary>
+        <p id="result-transcript"></p>
+      </details>
+      <p id="result-meta"></p>
+    </section>
+
+    <section id="view-error" hidden>
+      <p id="error-text"></p>
+      <button id="error-back">Back</button>
+    </section>
+
+    <section id="view-settings" hidden>
+      <p>
+        <label for="api-key">OpenRouter API key</label><br />
+        <input id="api-key" type="password" autocomplete="off" spellcheck="false" />
+      </p>
+      <p>
+        <label for="transcribe-model">Transcription model</label><br />
+        <input id="transcribe-model" type="text" autocomplete="off" spellcheck="false" />
+      </p>
+      <p>
+        <label for="rewrite-model">Rewrite model</label><br />
+        <input id="rewrite-model" type="text" autocomplete="off" spellcheck="false" />
+      </p>
+      <button id="save-settings">Save</button>
+      <p id="settings-saved" hidden>Saved</p>
+    </section>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

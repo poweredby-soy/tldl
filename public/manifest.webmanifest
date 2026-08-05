@@ -1,0 +1,62 @@
+{
+  "name": "tldl",
+  "short_name": "tldl",
+  "description": "Too long; didn't listen.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0b0f",
+  "theme_color": "#0b0b0f",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "audio",
+          "accept": [
+            "audio/*",
+            "audio/ogg",
+            "audio/opus",
+            "audio/mpeg",
+            "audio/mp4",
+            "audio/aac",
+            "audio/wav",
+            ".opus",
+            ".ogg",
+            ".oga",
+            ".mp3",
+            ".m4a",
+            ".aac",
+            ".wav"
+          ]
+        }
+      ]
+    }
+  }
+}
