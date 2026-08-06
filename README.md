@@ -18,6 +18,8 @@ A static site, a service worker, and two calls to OpenRouter.
 
 WhatsApp voice notes are Opus inside an Ogg container. OpenRouter has no `opus` format, so they go up under an `.ogg` name and an `audio/ogg` type and the provider decodes the codec. The Android share sheet is unreliable about MIME types, so `src/audio.ts` trusts the filename extension first.
 
+The share sheet is Android only. WebKit has never implemented the Web Share Target API, so an installed PWA cannot register itself with the iOS share sheet; on iOS that belongs to App Store apps and their Share Extensions. Nothing in the manifest changes this. On iOS the file picker on the start screen is the whole story: save the voice note out of WhatsApp into Files, open the app, pick it.
+
 ## Setup
 
 ```
