@@ -45,9 +45,11 @@ The origin must stay fixed. Changing hostnames means uninstalling and reinstalli
 
 About 1.9 seconds before the first word appears and 4.4 to a finished message, for a seven-minute voice note. Around $0.007 of that message, roughly two thirds of it transcription. A typical one or two minute message is a fifth of a cent. Every response reports its real cost, shown under the result.
 
-Defaults are `openai/whisper-large-v3-turbo` and `google/gemini-3-flash-preview`, both overridable in Settings, both picked by measuring one real message against the whole catalogue. `docs/benchmarks/2026-08-06-pipeline-latency/` has the numbers and `docs/adr/0001-transcription-and-rewrite-models.md` has the reasoning. Gemini 3.6 Flash is the model the rewrite falls back to when every endpoint of the chosen one is down, which is also what happens the day Google retires a preview slug.
+The models are `openai/whisper-large-v3-turbo` and `google/gemini-3-flash-preview`, both in `src/openrouter.ts`, both picked by measuring one real message against the whole catalogue. `docs/benchmarks/2026-08-06-pipeline-latency/` has the numbers and `docs/adr/0001-transcription-and-rewrite-models.md` has the reasoning. Gemini 3.6 Flash is the model the rewrite falls back to when every endpoint of the chosen one is down, which is also what happens the day Google retires a preview slug.
 
-Transcription goes up as `:nitro`, the shorthand for sorting providers by throughput. The default model has one endpoint so it changes nothing there; it is for the slugs Settings can be pointed at, because transcription is most of the bill and the default routing weights price. A slug that already names a variant in Settings keeps the one it names.
+They are not in Settings. Which model does the job is a property of the job, settled by measuring, and a text field on a phone only offers the chance to pin a device to whatever was current the day it was first saved. Changing one is a commit.
+
+Transcription goes up as `:nitro`, the shorthand for sorting providers by throughput, because transcription is most of the bill and the default routing weights price. The model in use has one endpoint, so today it changes nothing.
 
 The transcription call asks for `verbose_json`, which buys the duration and the spoken language that the rewrite prompt then names instead of inferring. Endpoints that do not implement it answer 400 rather than ignoring it, and half of them have not, so a refusal that names the format is asked again in plain `json`. That message loses the duration and the language and keeps the transcript, which is the part worth having.
 

@@ -4,6 +4,14 @@ import type { Language } from './settings.ts';
 
 const BASE_URL = 'https://openrouter.ai/api/v1';
 
+/**
+ * Both were picked by running a real message against the whole catalogue:
+ * `docs/benchmarks/2026-08-06-pipeline-latency/`. Properties of the job, not preferences,
+ * so they are here rather than in Settings.
+ */
+export const TRANSCRIBE_MODEL = 'openai/whisper-large-v3-turbo';
+export const REWRITE_MODEL = 'google/gemini-3-flash-preview';
+
 /** Where the rewrite goes when every endpoint of the chosen model is down. */
 const SECOND_CHOICE_REWRITE_MODEL = 'google/gemini-3.6-flash';
 
@@ -56,9 +64,9 @@ export type Transcription = {
  * cannot carry as a nested field. Transcription is most of the bill, so a slug with more
  * than one endpoint should not be routed on price.
  *
- * The default model has a single endpoint, which makes this a no-op for it. It stays for
- * the slugs Settings can be pointed at. A slug that already names a variant, `:free` or
- * `:floor` or anything else, keeps it.
+ * `TRANSCRIBE_MODEL` has a single endpoint, which makes this a no-op today. It stays for
+ * the day that constant is pointed at a model with a long tail of them. A slug that already
+ * names a variant, `:free` or `:floor` or anything else, keeps it.
  */
 function fastest(model: string): string {
   return model.includes(':') ? model : `${model}:nitro`;

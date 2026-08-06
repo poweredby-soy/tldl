@@ -13,12 +13,7 @@ Object.defineProperty(globalThis, 'localStorage', {
 });
 
 test('keeps the language it was saved with', () => {
-  saveSettings({
-    apiKey: 'key',
-    transcribeModel: 'a/model',
-    rewriteModel: 'another/model',
-    outputLanguage: 'de',
-  });
+  saveSettings({ apiKey: 'key', outputLanguage: 'de' });
 
   assert.equal(loadSettings().outputLanguage, 'de');
 });
@@ -28,4 +23,20 @@ test('falls back to English for a language it does not know', () => {
   stored.set('tldl.settings', JSON.stringify({ apiKey: 'key', outputLanguage: 'fr' }));
 
   assert.equal(loadSettings().outputLanguage, 'en');
+});
+
+test('ignores the models an older entry pinned', () => {
+  // Every device that saved before the models moved out of Settings still holds the slugs
+  // it saved, and reading them back would keep it on whichever pair was current that day.
+  stored.set(
+    'tldl.settings',
+    JSON.stringify({
+      apiKey: 'key',
+      transcribeModel: 'openai/whisper-large-v3',
+      rewriteModel: 'deepseek/deepseek-v4-flash',
+      outputLanguage: 'en',
+    }),
+  );
+
+  assert.deepEqual(loadSettings(), { apiKey: 'key', outputLanguage: 'en' });
 });

@@ -13,7 +13,8 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 | `public/sw.js` | Share-target POST intercept. The one genuinely tricky file. |
 | `public/manifest.webmanifest` | `share_target` declaration. Both MIME types and extensions in `accept`, or Android shows the app and then delivers nothing. |
 | `src/share.ts` | Collects the parked file, destructively. |
-| `src/openrouter.ts` | Both API calls. |
+| `src/openrouter.ts` | Both API calls, and the models that serve them. |
+| `src/settings.ts` | The API key and the output language. Only what is the user's to choose. |
 | `src/audio.ts` | Format detection, and shaping the upload the endpoint reads it off. |
 | `src/prompt.ts` | The rewrite prompt. Where output quality actually lives. |
 | `src/main.ts` | View switching and wiring. |

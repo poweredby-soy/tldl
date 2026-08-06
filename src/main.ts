@@ -7,7 +7,14 @@ import {
   type Language,
 } from './settings.ts';
 import { takeSharedAudio } from './share.ts';
-import { OpenRouterError, rewrite, transcribe, type Transcription } from './openrouter.ts';
+import {
+  OpenRouterError,
+  REWRITE_MODEL,
+  rewrite,
+  TRANSCRIBE_MODEL,
+  transcribe,
+  type Transcription,
+} from './openrouter.ts';
 
 type View = 'idle' | 'working' | 'result' | 'error' | 'settings';
 
@@ -136,12 +143,7 @@ async function run(audio: Blob, filename: string): Promise<void> {
 
   try {
     showWorking('Transcribing', describeSize(audio.size));
-    const transcription = await transcribe(
-      audio,
-      filename,
-      settings.apiKey,
-      settings.transcribeModel,
-    );
+    const transcription = await transcribe(audio, filename, settings.apiKey, TRANSCRIBE_MODEL);
 
     if (!transcription.text) {
       throw new Error('The transcription came back empty.');
@@ -155,7 +157,7 @@ async function run(audio: Blob, filename: string): Promise<void> {
     const rewritten = await rewrite(
       transcription,
       settings.apiKey,
-      settings.rewriteModel,
+      REWRITE_MODEL,
       settings.outputLanguage,
       (delta) => {
         if (!started) {
@@ -203,8 +205,6 @@ function openSettings(hint = ''): void {
   const settings = loadSettings();
   el<HTMLInputElement>('api-key').value = settings.apiKey;
   showLanguage(settings.outputLanguage);
-  el<HTMLInputElement>('transcribe-model').value = settings.transcribeModel;
-  el<HTMLInputElement>('rewrite-model').value = settings.rewriteModel;
   el('settings-saved').hidden = true;
   setHint(hint);
   show('settings');
@@ -229,12 +229,7 @@ function wireUp(): void {
 
   el('save-settings').addEventListener('click', () => {
     const apiKey = el<HTMLInputElement>('api-key').value.trim();
-    saveSettings({
-      apiKey,
-      transcribeModel: el<HTMLInputElement>('transcribe-model').value.trim(),
-      rewriteModel: el<HTMLInputElement>('rewrite-model').value.trim(),
-      outputLanguage: chosenLanguage(),
-    });
+    saveSettings({ apiKey, outputLanguage: chosenLanguage() });
 
     if (!apiKey) {
       el('settings-saved').hidden = false;

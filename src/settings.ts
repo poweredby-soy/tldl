@@ -1,8 +1,5 @@
 const STORAGE_KEY = 'tldl.settings';
 
-export const DEFAULT_TRANSCRIBE_MODEL = 'openai/whisper-large-v3-turbo';
-export const DEFAULT_REWRITE_MODEL = 'google/gemini-3-flash-preview';
-
 export type Language = 'en' | 'de';
 
 export const DEFAULT_LANGUAGE: Language = 'en';
@@ -16,17 +13,14 @@ export function isLanguage(value: unknown): value is Language {
   return value === 'en' || value === 'de';
 }
 
+/** Only what is the user's to choose. The models are the app's, and live in `openrouter.ts`. */
 export type Settings = {
   apiKey: string;
-  transcribeModel: string;
-  rewriteModel: string;
   outputLanguage: Language;
 };
 
 const DEFAULTS: Settings = {
   apiKey: '',
-  transcribeModel: DEFAULT_TRANSCRIBE_MODEL,
-  rewriteModel: DEFAULT_REWRITE_MODEL,
   outputLanguage: DEFAULT_LANGUAGE,
 };
 
@@ -39,8 +33,6 @@ export function loadSettings(): Settings {
     const parsed = JSON.parse(raw) as Partial<Settings>;
     return {
       apiKey: parsed.apiKey?.trim() || DEFAULTS.apiKey,
-      transcribeModel: parsed.transcribeModel?.trim() || DEFAULTS.transcribeModel,
-      rewriteModel: parsed.rewriteModel?.trim() || DEFAULTS.rewriteModel,
       outputLanguage: isLanguage(parsed.outputLanguage)
         ? parsed.outputLanguage
         : DEFAULTS.outputLanguage,
