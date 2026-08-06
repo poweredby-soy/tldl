@@ -56,9 +56,13 @@ so covering this would mean a retry in `transcribe()`. Not done.
 plain `openai/whisper-large-v3` cost exactly Groq's rate, so both slugs were landing on Groq and
 the routing the `fastest()` helper exists to force was already happening.
 
-## Known bug this surfaced
+## The bug this surfaced
 
-`transcribe()` always sends `response_format: 'verbose_json'`. Endpoints that do not implement it
-return a hard 400 rather than ignoring it, and six of the twelve transcription models refuse it.
-Any of those typed into Settings breaks the app with an OpenRouter error. Both defaults are
-unaffected, so this is recorded rather than fixed.
+`transcribe()` always sent `response_format: 'verbose_json'`. Endpoints that do not implement it
+return a hard 400 rather than ignoring it, and six of the twelve transcription models refuse it,
+so any of those typed into Settings broke the app with an OpenRouter error.
+
+It now asks again in plain `json` when the refusal names the format, and takes the transcript
+without the duration and the spoken language. The prompt already handles their absence. A 400
+raised for any other reason still stops there, because asking again costs the phone the whole
+file a second time.

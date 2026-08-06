@@ -49,7 +49,7 @@ Defaults are `openai/whisper-large-v3-turbo` and `google/gemini-3-flash-preview`
 
 Transcription goes up as `:nitro`, the shorthand for sorting providers by throughput. The default model has one endpoint so it changes nothing there; it is for the slugs Settings can be pointed at, because transcription is most of the bill and the default routing weights price. A slug that already names a variant in Settings keeps the one it names.
 
-The transcription call asks for `verbose_json`, which buys the duration and the spoken language that the rewrite prompt then names instead of inferring. Endpoints that do not implement it answer 400 rather than ignoring it, so half the transcription catalogue cannot be typed into Settings as things stand.
+The transcription call asks for `verbose_json`, which buys the duration and the spoken language that the rewrite prompt then names instead of inferring. Endpoints that do not implement it answer 400 rather than ignoring it, and half of them have not, so a refusal that names the format is asked again in plain `json`. That message loses the duration and the language and keeps the transcript, which is the part worth having.
 
 The rewrite sorts providers by throughput, and that is load-bearing: unsorted, the request lands on the endpoint that thinks before answering, which is ten times the wait before the first word and twice the price. It also asks for `low` reasoning effort, which the default model's endpoint ignores and the fallback reads. With reasoning off entirely a model gives the message back in the language it was spoken and at close to its spoken length.
 

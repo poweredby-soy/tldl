@@ -51,6 +51,26 @@ function answerWith(body: Record<string, unknown>): { form?: FormData } {
   return sent;
 }
 
+/** Answers each fetch with the next response, and keeps the format every one of them asked for. */
+function answerInTurn(responses: Response[]): { formats: string[] } {
+  const sent: { formats: string[] } = { formats: [] };
+
+  globalThis.fetch = (_input, init) => {
+    sent.formats.push(String((init?.body as FormData).get('response_format')));
+
+    return Promise.resolve(responses[sent.formats.length - 1]);
+  };
+
+  return sent;
+}
+
+function refusal(message: string): Response {
+  return Response.json({ error: { message, code: 400 } }, { status: 400 });
+}
+
+const VERBOSE_JSON_REFUSED =
+  'The selected model does not support response_format "verbose_json". Use "json" instead.';
+
 const VOICE_NOTE = new Blob(['bytes'], { type: 'application/octet-stream' });
 
 test('uploads the audio as a form, not as base64 in a JSON body', async () => {
@@ -91,6 +111,46 @@ test('keeps the duration and the language the endpoint reported', async () => {
   assert.equal(result.spokenLanguage, 'dutch');
   assert.equal(result.duration, 402.5);
   assert.equal(result.cost, 0.0134);
+});
+
+test('asks again in plain json when the endpoint refuses verbose_json', async () => {
+  // Half the transcription catalogue answers 400 rather than ignoring a format it has not got.
+  const sent = answerInTurn([
+    refusal(VERBOSE_JSON_REFUSED),
+    Response.json({ text: 'I found her alone.', usage: { cost: 0.0104 } }),
+  ]);
+
+  const result = await transcribe(VOICE_NOTE, 'voice.opus', 'key', 'a/model');
+
+  assert.deepEqual(sent.formats, ['verbose_json', 'json']);
+  assert.equal(result.text, 'I found her alone.');
+  assert.equal(result.cost, 0.0104);
+  // Nothing to report without the verbose body, and the prompt already handles their absence.
+  assert.equal(result.duration, undefined);
+  assert.equal(result.spokenLanguage, undefined);
+});
+
+test('sends the audio once when the endpoint refuses for any other reason', async () => {
+  // A second upload costs the phone the whole file again, so only the one 400 earns it.
+  const sent = answerInTurn([refusal('Provider returned 400')]);
+
+  await assert.rejects(() => transcribe(VOICE_NOTE, 'voice.opus', 'key', 'a/model'), {
+    message: 'Provider returned 400',
+    status: 400,
+  });
+
+  assert.deepEqual(sent.formats, ['verbose_json']);
+});
+
+test('gives up when plain json is refused too', async () => {
+  const sent = answerInTurn([refusal(VERBOSE_JSON_REFUSED), refusal('Provider returned 400')]);
+
+  await assert.rejects(() => transcribe(VOICE_NOTE, 'voice.opus', 'key', 'a/model'), {
+    message: 'Provider returned 400',
+    status: 400,
+  });
+
+  assert.deepEqual(sent.formats, ['verbose_json', 'json']);
 });
 
 test('ignores a language that is not one', async () => {

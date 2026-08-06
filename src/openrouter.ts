@@ -75,19 +75,23 @@ function spokenLanguage(value: unknown): string | undefined {
   return /^[a-z-]{2,20}$/i.test(name) ? name : undefined;
 }
 
-export async function transcribe(
-  audio: Blob,
-  filename: string,
+/**
+ * `verbose_json` buys the spoken language, which the rewrite prompt would otherwise have to
+ * infer, and the duration, which is the number this app is named after. Endpoints that have
+ * not implemented it reject the request rather than ignoring it, and half of them have not.
+ */
+type ResponseFormat = 'verbose_json' | 'json';
+
+async function transcribeAs(
+  upload: File,
   apiKey: string,
   model: string,
+  format: ResponseFormat,
 ): Promise<Transcription> {
   const form = new FormData();
   form.append('model', fastest(model));
-  form.append('file', toUpload(audio, filename));
-  // Buys the spoken language, which the rewrite prompt would otherwise have to infer,
-  // and the duration, which is the number this app is named after. Endpoints that do not
-  // implement it answer 400 rather than ignoring it, so this rules out half the catalogue.
-  form.append('response_format', 'verbose_json');
+  form.append('file', upload);
+  form.append('response_format', format);
 
   const response = await fetch(`${BASE_URL}/audio/transcriptions`, {
     method: 'POST',
@@ -112,6 +116,34 @@ export async function transcribe(
     spokenLanguage: spokenLanguage(result.language),
     duration: result.duration,
   };
+}
+
+/** The refusal names the format, which a 400 raised for any other reason does not. */
+function refusesVerboseJson(error: unknown): boolean {
+  return (
+    error instanceof OpenRouterError && error.status === 400 && error.message.includes('verbose_json')
+  );
+}
+
+export async function transcribe(
+  audio: Blob,
+  filename: string,
+  apiKey: string,
+  model: string,
+): Promise<Transcription> {
+  const upload = toUpload(audio, filename);
+
+  try {
+    return await transcribeAs(upload, apiKey, model, 'verbose_json');
+  } catch (error) {
+    // Asking again means sending the whole file a second time, so only the refusal that
+    // names a format earns it. The transcript matters more than the stats riding on it.
+    if (refusesVerboseJson(error)) {
+      return transcribeAs(upload, apiKey, model, 'json');
+    }
+
+    throw error;
+  }
 }
 
 export type Rewrite = {
