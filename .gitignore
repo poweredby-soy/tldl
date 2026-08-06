@@ -4,3 +4,5 @@ dist
 *.local
 
 .claude/settings.local.json
+docs/benchmarks/*/stt-results
+docs/benchmarks/*/rewrite-results.json

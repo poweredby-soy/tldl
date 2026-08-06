@@ -1,0 +1,160 @@
+[
+ {
+  "model": "openai/whisper-large-v3-turbo",
+  "response_format": "verbose_json",
+  "seconds": [
+   1.1018,
+   1.0915,
+   1.2914,
+   0.9948
+  ],
+  "rejects_verbose_json": false,
+  "cost": 0.004624104843755555,
+  "reported_duration": 416.169435938,
+  "reported_language": "German",
+  "characters": 7795
+ },
+ {
+  "model": "openai/whisper-large-v3:nitro",
+  "response_format": "verbose_json",
+  "seconds": [
+   2.4661,
+   2.9677,
+   2.2063,
+   2.3461
+  ],
+  "rejects_verbose_json": false,
+  "cost": 0.012831890941421667,
+  "reported_duration": 416.169435938,
+  "reported_language": "German",
+  "characters": 7770
+ },
+ {
+  "model": "openai/whisper-large-v3",
+  "response_format": "verbose_json",
+  "seconds": [
+   2.0029
+  ],
+  "rejects_verbose_json": false,
+  "cost": 0.012831890941421667,
+  "reported_duration": 416.169435938,
+  "reported_language": "German",
+  "characters": 7770
+ },
+ {
+  "model": "x-ai/grok-stt-1.0",
+  "response_format": "verbose_json",
+  "seconds": [
+   3.1987,
+   2.852,
+   2.9248,
+   3.6357
+  ],
+  "rejects_verbose_json": false,
+  "cost": 0.011563277777777778,
+  "reported_duration": 416.278,
+  "reported_language": "de",
+  "characters": 6956
+ },
+ {
+  "model": "deepgram/nova-3",
+  "response_format": "verbose_json",
+  "seconds": [
+   1.4693
+  ],
+  "rejects_verbose_json": false,
+  "cost": 0.0298334,
+  "reported_duration": 416.28,
+  "reported_language": null,
+  "characters": 72
+ },
+ {
+  "model": "fish-audio/transcribe-1",
+  "response_format": "verbose_json",
+  "seconds": [
+   13.3166
+  ],
+  "rejects_verbose_json": false,
+  "cost": 0.0417,
+  "reported_duration": 417,
+  "reported_language": "de",
+  "characters": 8104
+ },
+ {
+  "model": "nvidia/parakeet-tdt-0.6b-v3",
+  "response_format": "json",
+  "seconds": [
+   2.2676,
+   1.4497,
+   1.4801,
+   5.427
+  ],
+  "rejects_verbose_json": true,
+  "cost": 0.0104069453125,
+  "reported_duration": null,
+  "reported_language": null,
+  "characters": 8037
+ },
+ {
+  "model": "mistralai/voxtral-mini-transcribe",
+  "response_format": "json",
+  "seconds": [
+   4.4651
+  ],
+  "rejects_verbose_json": true,
+  "cost": 0.0208,
+  "reported_duration": null,
+  "reported_language": null,
+  "characters": 7811
+ },
+ {
+  "model": "microsoft/mai-transcribe-1.5",
+  "response_format": "json",
+  "seconds": [
+   3.4692
+  ],
+  "rejects_verbose_json": true,
+  "cost": 0.0417,
+  "reported_duration": null,
+  "reported_language": null,
+  "characters": 8455
+ },
+ {
+  "model": "openai/gpt-4o-mini-transcribe",
+  "response_format": "json",
+  "seconds": [
+   12.737
+  ],
+  "rejects_verbose_json": true,
+  "cost": 0.0140125,
+  "reported_duration": null,
+  "reported_language": null,
+  "characters": 7947
+ },
+ {
+  "model": "openai/gpt-transcribe",
+  "response_format": "json",
+  "seconds": [
+   14.6201
+  ],
+  "rejects_verbose_json": true,
+  "cost": 0.031275,
+  "reported_duration": null,
+  "reported_language": null,
+  "characters": 7807
+ },
+ {
+  "model": "qwen/qwen3-asr-flash-2026-02-10",
+  "response_format": "json",
+  "seconds": [],
+  "rejects_verbose_json": true,
+  "error": "Provider returned 400 — will not accept Ogg/Opus"
+ },
+ {
+  "model": "google/chirp-3",
+  "response_format": "json",
+  "seconds": [],
+  "rejects_verbose_json": true,
+  "error": "Provider returned 400 — will not accept Ogg/Opus"
+ }
+]

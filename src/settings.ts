@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'tldl.settings';
 
-export const DEFAULT_TRANSCRIBE_MODEL = 'openai/whisper-large-v3';
-export const DEFAULT_REWRITE_MODEL = 'deepseek/deepseek-v4-flash';
+export const DEFAULT_TRANSCRIBE_MODEL = 'openai/whisper-large-v3-turbo';
+export const DEFAULT_REWRITE_MODEL = 'google/gemini-3-flash-preview';
 
 export type Language = 'en' | 'de';
 

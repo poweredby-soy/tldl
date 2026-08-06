@@ -53,11 +53,12 @@ export type Transcription = {
 
 /**
  * `:nitro` is the shorthand for `provider.sort: 'throughput'`, which a multipart body
- * cannot carry as a nested field. Transcription is most of both the bill and the wait,
- * and the default routing weights price, so the slow endpoint wins by default. It also
- * decides `verbose_json`: whisper-large-v3 answers it on Groq and ignores it on Together.
+ * cannot carry as a nested field. Transcription is most of the bill, so a slug with more
+ * than one endpoint should not be routed on price.
  *
- * A slug that already names a variant, `:free` or `:floor` or anything else, keeps it.
+ * The default model has a single endpoint, which makes this a no-op for it. It stays for
+ * the slugs Settings can be pointed at. A slug that already names a variant, `:free` or
+ * `:floor` or anything else, keeps it.
  */
 function fastest(model: string): string {
   return model.includes(':') ? model : `${model}:nitro`;
@@ -84,7 +85,8 @@ export async function transcribe(
   form.append('model', fastest(model));
   form.append('file', toUpload(audio, filename));
   // Buys the spoken language, which the rewrite prompt would otherwise have to infer,
-  // and the duration, which is the number this app is named after.
+  // and the duration, which is the number this app is named after. Endpoints that do not
+  // implement it answer 400 rather than ignoring it, so this rules out half the catalogue.
   form.append('response_format', 'verbose_json');
 
   const response = await fetch(`${BASE_URL}/audio/transcriptions`, {
@@ -188,12 +190,12 @@ export async function rewrite(
       route: 'fallback',
       stream: true,
       usage: { include: true },
-      // The rewrite translates and compresses, and both need some thinking: with
-      // reasoning off the model leaves the message in the spoken language and at
-      // close to its spoken length. Low buys the prompt back without the stall.
+      // The default model's endpoint ignores this. The fallback reads it, and there it
+      // buys the prompt back: with reasoning off a model leaves the message in the
+      // spoken language and at close to its spoken length.
       reasoning: { effort: 'low' },
-      // The rewrite models tend to have a long tail of endpoints at mixed speeds,
-      // and the default routing weights price.
+      // Load-bearing. Unsorted, the request lands on the endpoint that does the thinking,
+      // which is ten times the wait before the first word and twice the price.
       provider: { sort: 'throughput' },
       messages: [
         {

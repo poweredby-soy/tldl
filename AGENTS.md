@@ -24,7 +24,9 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 - **No backend, and it should stay that way.** OpenRouter sends `access-control-allow-origin: *` and allows `Authorization`, so the browser calls it directly. Verified, not assumed.
 - **The API key is in `localStorage` by design.** Single user, own device, own origin. Do not add a proxy or a server-side key store without asking.
 - **Opus goes up as `ogg`.** OpenRouter has no `opus` format. `toUpload` renames the file and restates its type so the endpoint reads a container it knows. Do not add a client-side transcode; the provider decodes the codec.
-- **The audio travels as `multipart/form-data`.** Not base64 in a JSON body. The form takes only `file`, `model`, `language`, `temperature`, `response_format` and `timestamp_granularities`, so a nested `provider` object cannot ride along; provider routing on that call has to go through the model slug.
+- **The audio travels as `multipart/form-data`.** Not base64 in a JSON body. The form takes only `file`, `model`, `language`, `temperature`, `response_format` and `timestamp_granularities`, so a nested `provider` object cannot ride along; provider routing on that call has to go through the model slug. The JSON body does take `provider`, at the cost of base64 growing the upload by a third.
+- **`verbose_json` is a 400, not a shrug.** Endpoints that do not implement it reject the request, and six of the twelve transcription models do. Changing the transcription default means checking it answers `verbose_json`, or the duration and the spoken language go with it.
+- **The rewrite is the wait, not the transcription.** Measured, on a real message: `docs/benchmarks/2026-08-06-pipeline-latency/`. Reach for that directory before optimising anything in the pipeline, and re-measure rather than reasoning from published throughput figures, which were off by a factor of ten here.
 - **The share sheet lies about MIME types.** `detectFormat` trusts the filename extension before the reported type, and falls back to `ogg`. Both behaviours are tested.
 - **The origin is fixed.** Changing hostnames forces a reinstall of the PWA.
 
@@ -53,3 +55,9 @@ The five canonical triage roles, used verbatim as GitHub label names. See `docs/
 ### Domain docs
 
 Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Benchmarks
+
+`docs/benchmarks/<date>-<subject>/` holds the data behind a model or routing choice: the runs as
+JSON, the text each model produced, and the scripts that produced both. Model choices are decided
+by running a real message, so the evidence is worth keeping and worth re-running.
