@@ -11,7 +11,7 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 | File | Holds |
 | --- | --- |
 | `public/sw.js` | Share-target POST intercept. The one genuinely tricky file. |
-| `public/manifest.webmanifest` | `share_target` declaration. Both MIME types and extensions in `accept`, or Android shows the app and then delivers nothing. |
+| `public/manifest.webmanifest` | `share_target`, `file_handlers` and `launch_handler`. Both MIME types and extensions in `accept`, or Android shows the app and then delivers nothing. |
 | `src/share.ts` | Collects the parked file, destructively. |
 | `src/openrouter.ts` | Both API calls, and the models that serve them. |
 | `src/settings.ts` | The API key and the output language. Only what is the user's to choose. |
@@ -30,6 +30,8 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 - **The rewrite is the wait, not the transcription.** Measured, on a real message: `docs/benchmarks/2026-08-06-pipeline-latency/`. Reach for that directory before optimising anything in the pipeline, and re-measure rather than reasoning from published throughput figures, which were off by a factor of ten here.
 - **The share sheet lies about MIME types.** `detectFormat` trusts the filename extension before the reported type, and falls back to `ogg`. Both behaviours are tested.
 - **The origin is fixed.** Changing hostnames forces a reinstall of the PWA.
+- **A voice note arrives by two doors.** The share sheet parks it in a cache for `share.ts` to collect; the file manager hands it to `launchQueue` as a handle. Both end at `run()`, and anything that changes how a message starts has to change both.
+- **Everything past the two API calls is progressive.** `navigator.share`, `startViewTransition`, `launchQueue` and `storage.persist` are each absent somewhere, most of them on iOS. Every one is feature-detected and the app is whole without any of them; keep it that way rather than reaching for a polyfill.
 
 ## Working on the prompt
 

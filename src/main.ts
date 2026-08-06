@@ -34,10 +34,31 @@ const views: Record<View, HTMLElement> = {
   settings: el('view-settings'),
 };
 
-function show(view: View): void {
+function swapTo(view: View): void {
   for (const [name, node] of Object.entries(views)) {
     node.hidden = name !== view;
   }
+}
+
+let showing: View | null = null;
+
+/**
+ * Cross-fades between views, which is what stops a switch from reading as a jump. Only a
+ * real change is worth animating: the result view is shown again once the message is whole,
+ * and fading the finished text over itself would be a stutter at the end of every run.
+ */
+function show(view: View): void {
+  const changed = view !== showing;
+  showing = view;
+
+  const quiet = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!changed || quiet || !document.startViewTransition) {
+    swapTo(view);
+    return;
+  }
+
+  document.startViewTransition(() => swapTo(view));
 }
 
 function showWorking(step: string, detail = ''): void {
@@ -258,8 +279,53 @@ function wireUp(): void {
     }, 1500);
   });
 
+  // The share sheet is how the message arrived, so it is also how it should leave. Absent
+  // on a browser without one, which is why the button ships hidden.
+  el('share').hidden = !navigator.share;
+  el('share').addEventListener('click', async () => {
+    try {
+      await navigator.share({ text: el('result-text').textContent ?? '' });
+    } catch {
+      // Dismissing the sheet rejects, and a reader changing their mind is not an error.
+    }
+  });
+
   el('again').addEventListener('click', () => showIdle());
   el('error-back').addEventListener('click', () => showIdle());
+}
+
+/**
+ * The API key and a voice note parked mid-share both live in storage a browser is free to
+ * evict when the device runs short. Asking costs nothing and a refusal changes nothing.
+ */
+function keepStorage(): void {
+  void navigator.storage?.persist?.();
+}
+
+/** The File Handling API is Chromium-only, so the DOM lib does not carry it. */
+declare global {
+  interface Window {
+    launchQueue?: {
+      setConsumer(consume: (launch: { files: FileSystemFileHandle[] }) => void): void;
+    };
+  }
+}
+
+/** Chromium hands over files opened from the file manager here, not through the share cache. */
+function collectLaunchedFiles(): void {
+  if (!window.launchQueue) {
+    return;
+  }
+
+  window.launchQueue.setConsumer(async (launch) => {
+    const handle = launch.files.at(0);
+    if (!handle) {
+      return;
+    }
+
+    const file = await handle.getFile();
+    await run(file, file.name);
+  });
 }
 
 function registerServiceWorker(): void {
@@ -283,6 +349,9 @@ function consumeShareFlag(): string | null {
 async function boot(): Promise<void> {
   wireUp();
   registerServiceWorker();
+  keepStorage();
+  // Set before the first await: the launch is already queued by the time this runs.
+  collectLaunchedFiles();
 
   const flag = consumeShareFlag();
   const shared = await takeSharedAudio();

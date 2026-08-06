@@ -15,6 +15,7 @@ A static site, a service worker, and two calls to OpenRouter.
 3. The app collects the file on boot and drops it from the cache so a reload cannot reprocess it.
 4. `POST /api/v1/audio/transcriptions` returns the transcript, in whatever language was spoken. The audio goes up as `multipart/form-data`, so the bytes travel as bytes. Asking for `verbose_json` also buys the duration, shown under the result, and the language that was heard, which the rewrite prompt then names instead of inferring. About a second for a seven-minute message, and a tenth of the wait.
 5. `POST /api/v1/chat/completions` rewrites the transcript in the speaker's voice, in the language picked in Settings, keeping their order and their points. It streams, so the message writes itself onto the screen instead of landing all at once at the end. The copy button, the transcript and the cost appear once it is whole.
+6. `navigator.share()` sends the finished message back out through the same sheet it arrived on, which on Android means straight into the thread it came from. The button hides itself on a browser without one.
 
 WhatsApp voice notes are Opus inside an Ogg container. OpenRouter has no `opus` format, so they go up under an `.ogg` name and an `audio/ogg` type and the provider decodes the codec. The Android share sheet is unreliable about MIME types, so `src/audio.ts` trusts the filename extension first.
 

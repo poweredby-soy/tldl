@@ -28,6 +28,23 @@
       "purpose": "maskable"
     }
   ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "audio/ogg": [".ogg", ".oga", ".opus"],
+        "audio/mpeg": [".mp3", ".mpga"],
+        "audio/mp4": [".m4a", ".mp4"],
+        "audio/aac": [".aac"],
+        "audio/wav": [".wav", ".wave"],
+        "audio/flac": [".flac"],
+        "audio/webm": [".webm"]
+      }
+    }
+  ],
   "share_target": {
     "action": "/share",
     "method": "POST",
