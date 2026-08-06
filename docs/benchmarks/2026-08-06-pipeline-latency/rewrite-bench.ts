@@ -3,15 +3,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rewriteSystemPrompt, rewriteUserPrompt } from '../../../src/prompt.ts';
 
-// Usage: OPENROUTER_API_KEY=... node rewrite-bench.ts <passes> <path/to/voice.ogg>
+// Usage: OPENROUTER_API_KEY=... node rewrite-bench.ts <passes> <transcript.txt> <voice.ogg>
+// Transcribe a message with stt-bench.sh first; its output is what this reads.
 const KEY = process.env.OPENROUTER_API_KEY!;
 const DIR = dirname(fileURLToPath(import.meta.url));
-const AUDIO = process.argv[3];
+const AUDIO = process.argv[4];
 
-const transcript = readFileSync(
-  join(DIR, 'transcripts/openai_whisper-large-v3-turbo.txt'),
-  'utf8',
-).trim();
+const transcript = readFileSync(process.argv[3], 'utf8').trim();
 
 // Only the single-call runs need it, so a missing sample still leaves the rest usable.
 const audio = AUDIO ? readFileSync(AUDIO).toString('base64') : '';
