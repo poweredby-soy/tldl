@@ -11,7 +11,7 @@ Single user, no accounts, no backend.
 A static site, a service worker, and two calls to OpenRouter.
 
 1. The share sheet POSTs the audio to `/share` as `multipart/form-data`.
-2. The service worker intercepts that POST, because a static host cannot accept one. It parks the file in a Cache and redirects to `/`.
+2. The service worker intercepts that POST, because a static host cannot accept one. It parks the file in a Cache and redirects to `/`. It takes the bytes off whatever field they arrive on, not only the `audio` the manifest asks for, because field names and MIME types come from the sending app and drift between its releases. A share that carries no bytes at all comes back with a list of the fields it did carry, printed on the start screen.
 3. The app collects the file on boot and drops it from the cache so a reload cannot reprocess it.
 4. `POST /api/v1/audio/transcriptions` returns the transcript, in whatever language was spoken. The audio goes up as `multipart/form-data`, so the bytes travel as bytes. Asking for `verbose_json` also buys the duration, shown under the result, and the language that was heard, which the rewrite prompt then names instead of inferring. About a second for a seven-minute message, and a tenth of the wait.
 5. `POST /api/v1/chat/completions` rewrites the transcript in the speaker's voice, in the language picked in Settings, keeping their order and their points. It streams, so the message writes itself onto the screen instead of landing all at once at the end. The copy button, the transcript and the cost appear once it is whole.

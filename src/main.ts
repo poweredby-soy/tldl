@@ -337,13 +337,22 @@ function registerServiceWorker(): void {
   });
 }
 
+type ShareOutcome = {
+  flag: string | null;
+  /** What the share sheet sent when it sent no audio, as the worker saw it. */
+  sent: string | null;
+};
+
 /** The share redirect leaves `?shared=` behind. Drop it so a reload isn't a re-share. */
-function consumeShareFlag(): string | null {
-  const flag = new URLSearchParams(location.search).get('shared');
+function consumeShareFlag(): ShareOutcome {
+  const params = new URLSearchParams(location.search);
+  const flag = params.get('shared');
+
   if (flag !== null) {
     history.replaceState(null, '', location.pathname);
   }
-  return flag;
+
+  return { flag, sent: params.get('sent') };
 }
 
 async function boot(): Promise<void> {
@@ -353,7 +362,7 @@ async function boot(): Promise<void> {
   // Set before the first await: the launch is already queued by the time this runs.
   collectLaunchedFiles();
 
-  const flag = consumeShareFlag();
+  const share = consumeShareFlag();
   const shared = await takeSharedAudio();
 
   if (shared) {
@@ -361,8 +370,13 @@ async function boot(): Promise<void> {
     return;
   }
 
-  if (flag === '0') {
-    showIdle('That share did not include an audio file.');
+  if (share.flag === '0') {
+    // The sheet's account of the share is the only clue to why, so it is shown rather than swallowed.
+    showIdle(
+      share.sent
+        ? `That share did not include an audio file. It sent: ${share.sent}`
+        : 'That share did not include an audio file.',
+    );
     return;
   }
 

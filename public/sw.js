@@ -41,9 +41,9 @@ self.addEventListener('fetch', (event) => {
 async function receiveShare(request) {
   try {
     const formData = await request.formData();
-    const file = formData.get('audio');
+    const file = pickSharedFile(formData);
 
-    if (file && typeof file === 'object' && file.size > 0) {
+    if (file) {
       const cache = await caches.open(SHARE_CACHE);
       await cache.put(
         SHARE_KEY,
@@ -56,11 +56,56 @@ async function receiveShare(request) {
       );
       return Response.redirect('/?shared=1', 303);
     }
-  } catch {
-    // Falls through to the error redirect below.
+
+    return shareFailed(describeShare(formData));
+  } catch (error) {
+    return shareFailed(`unreadable share (${error})`);
+  }
+}
+
+/** Sends the app back what arrived instead, which is the only account of a share that went wrong. */
+function shareFailed(sent) {
+  return Response.redirect(`/?shared=0&sent=${encodeURIComponent(sent.slice(0, 200))}`, 303);
+}
+
+/**
+ * The manifest asks for the file under `audio`, and the share sheet does not always agree:
+ * field names and MIME types both come from the sending app and both drift between its
+ * releases. Any field carrying bytes is the voice message, because nothing else is sent.
+ */
+function pickSharedFile(formData) {
+  const named = formData.get('audio');
+
+  if (hasBytes(named)) {
+    return named;
   }
 
-  return Response.redirect('/?shared=0', 303);
+  for (const value of formData.values()) {
+    if (hasBytes(value)) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function hasBytes(value) {
+  return value instanceof Blob && value.size > 0;
+}
+
+/** Names the fields and types a share carried, never their contents. */
+function describeShare(formData) {
+  const parts = [];
+
+  for (const [name, value] of formData.entries()) {
+    parts.push(
+      value instanceof Blob
+        ? `${name}=${value.name || 'file'} (${value.type || 'no type'}, ${value.size} bytes)`
+        : `${name}=text`,
+    );
+  }
+
+  return parts.length > 0 ? parts.join(', ') : 'nothing';
 }
 
 async function navigateWithCacheFallback(request) {
