@@ -41,7 +41,8 @@
         "audio/aac": [".aac"],
         "audio/wav": [".wav", ".wave"],
         "audio/flac": [".flac"],
-        "audio/webm": [".webm"]
+        "audio/webm": [".webm"],
+        "application/ogg": [".ogg", ".oga", ".opus"]
       }
     }
   ],
@@ -64,6 +65,8 @@
             "audio/mp4",
             "audio/aac",
             "audio/wav",
+            "application/ogg",
+            "application/octet-stream",
             ".opus",
             ".ogg",
             ".oga",

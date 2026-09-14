@@ -11,7 +11,7 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 | File | Holds |
 | --- | --- |
 | `public/sw.js` | Share-target POST intercept. The one genuinely tricky file. |
-| `public/manifest.webmanifest` | `share_target`, `file_handlers` and `launch_handler`. Both MIME types and extensions in `accept`, or Android shows the app and then delivers nothing. |
+| `public/manifest.webmanifest` | `share_target`, `file_handlers` and `launch_handler`. Both MIME types and extensions in `accept`, and `application/octet-stream` besides, or Chrome strips the file and the app is handed a title and nothing else. |
 | `src/share.ts` | Collects the parked file, destructively. |
 | `src/openrouter.ts` | Both API calls, and the models that serve them. |
 | `src/settings.ts` | The API key and the output language. Only what is the user's to choose. |

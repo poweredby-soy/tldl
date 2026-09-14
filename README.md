@@ -17,6 +17,8 @@ A static site, a service worker, and two calls to OpenRouter.
 5. `POST /api/v1/chat/completions` rewrites the transcript in the speaker's voice, in the language picked in Settings, keeping their order and their points. It streams, so the message writes itself onto the screen instead of landing all at once at the end. The copy button, the transcript and the cost appear once it is whole.
 6. `navigator.share()` sends the finished message back out through the same sheet it arrived on, which on Android means straight into the thread it came from. The button hides itself on a browser without one.
 
+Chrome matches the shared file's MIME type against `accept` in the manifest and silently drops what does not match, so a share arrives as a bare title. WhatsApp hands over a voice note as `application/octet-stream` often enough that the type is listed there alongside the audio ones, and `src/audio.ts` sorts out what it actually is.
+
 WhatsApp voice notes are Opus inside an Ogg container. OpenRouter has no `opus` format, so they go up under an `.ogg` name and an `audio/ogg` type and the provider decodes the codec. The Android share sheet is unreliable about MIME types, so `src/audio.ts` trusts the filename extension first.
 
 The share sheet is Android only. WebKit has never implemented the Web Share Target API, so an installed PWA cannot register itself with the iOS share sheet; on iOS that belongs to App Store apps and their Share Extensions. Nothing in the manifest changes this. On iOS the file picker on the start screen is the whole story: save the voice note out of WhatsApp into Files, open the app, pick it.
