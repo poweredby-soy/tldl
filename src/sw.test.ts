@@ -17,6 +17,7 @@ function loadWorker(): Record<string, (formData: FormData) => unknown> {
     Blob,
     File,
     URL,
+    TextDecoder,
   });
   runInContext(source, scope);
   return scope as never;
@@ -25,6 +26,7 @@ function loadWorker(): Record<string, (formData: FormData) => unknown> {
 const worker = loadWorker();
 const pickSharedFile = worker.pickSharedFile as (formData: FormData) => File | null;
 const describeShare = worker.describeShare as (formData: FormData) => string;
+const describeBody = worker.describeBody as unknown as (body: ArrayBuffer) => string;
 
 test('takes the file off the field the manifest asks for', () => {
   const form = new FormData();
@@ -71,4 +73,34 @@ test('describes a file by its type and size rather than its contents', () => {
   assert.match(described, /voice\.opus/);
   assert.match(described, /audio\/ogg/);
   assert.doesNotMatch(described, /what-was-said/);
+});
+
+test('names the parts a multipart body declares, without their contents', () => {
+  const body = [
+    '------x',
+    'Content-Disposition: form-data; name="title"',
+    '',
+    'Voice message',
+    '------x',
+    'Content-Disposition: form-data; name="audio"; filename="voice.opus"',
+    'Content-Type: audio/ogg',
+    '',
+    'what-was-said',
+    '------x--',
+    '',
+  ].join('\r\n');
+
+  const described = describeBody(new TextEncoder().encode(body).buffer);
+
+  assert.match(described, /2 parts/);
+  assert.match(described, /name="audio"/);
+  assert.match(described, /filename="voice.opus"/);
+  assert.doesNotMatch(described, /what-was-said/);
+});
+
+test('reports the size of a body that declares no parts at all', () => {
+  const described = describeBody(new TextEncoder().encode('nothing multipart here').buffer);
+
+  assert.match(described, /22 bytes/);
+  assert.match(described, /no parts/);
 });

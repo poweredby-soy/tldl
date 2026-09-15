@@ -40,6 +40,9 @@ self.addEventListener('fetch', (event) => {
  */
 async function receiveShare(request) {
   try {
+    // Kept before the parse: if the form comes out empty, the body is the only witness to
+    // whether the bytes were ever sent or were lost somewhere between the sheet and here.
+    const body = await request.clone().arrayBuffer();
     const formData = await request.formData();
     const file = pickSharedFile(formData);
 
@@ -57,7 +60,7 @@ async function receiveShare(request) {
       return Response.redirect('/?shared=1', 303);
     }
 
-    return shareFailed(describeShare(formData));
+    return shareFailed(`${describeShare(formData)}; body ${describeBody(body)}`);
   } catch (error) {
     return shareFailed(`unreadable share (${error})`);
   }
@@ -65,7 +68,7 @@ async function receiveShare(request) {
 
 /** Sends the app back what arrived instead, which is the only account of a share that went wrong. */
 function shareFailed(sent) {
-  return Response.redirect(`/?shared=0&sent=${encodeURIComponent(sent.slice(0, 200))}`, 303);
+  return Response.redirect(`/?shared=0&sent=${encodeURIComponent(sent.slice(0, 500))}`, 303);
 }
 
 /**
@@ -106,6 +109,23 @@ function describeShare(formData) {
   }
 
   return parts.length > 0 ? parts.join(', ') : 'nothing';
+}
+
+/**
+ * Reads the multipart headers off the raw body and nothing else. A share that arrives with a
+ * megabyte of body and a part named `audio` has been lost in the parse; one that arrives with
+ * a few hundred bytes never carried the voice note in the first place. The two have the same
+ * symptom on screen and different fixes, so the size and the part headers are worth reporting.
+ */
+function describeBody(body) {
+  const head = new TextDecoder().decode(body.slice(0, 4096));
+  const parts = head.match(/Content-Disposition:[^\r\n]*/gi) ?? [];
+  const types = head.match(/Content-Type:[^\r\n]*/gi) ?? [];
+  const headers = [...parts, ...types].join(' | ');
+
+  return parts.length > 0
+    ? `${body.byteLength} bytes, ${parts.length} parts: ${headers}`
+    : `${body.byteLength} bytes, no parts`;
 }
 
 async function navigateWithCacheFallback(request) {
