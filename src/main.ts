@@ -6,6 +6,7 @@ import {
   saveSettings,
   type Language,
 } from './settings.ts';
+import { looksLikeAudio } from './audio.ts';
 import { takeSharedAudio } from './share.ts';
 import {
   OpenRouterError,
@@ -155,6 +156,11 @@ function describeReduction(message: string, transcript: string): string {
 }
 
 async function run(audio: Blob, filename: string): Promise<void> {
+  if (!looksLikeAudio(audio.type, filename)) {
+    showIdle(`${filename || 'That file'} is not a voice message.`);
+    return;
+  }
+
   const settings = loadSettings();
 
   if (!settings.apiKey) {

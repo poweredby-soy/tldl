@@ -58,6 +58,7 @@
         {
           "name": "audio",
           "accept": [
+            "*/*",
             "audio/*",
             "audio/ogg",
             "audio/opus",

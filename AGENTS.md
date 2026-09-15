@@ -11,7 +11,7 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 | File | Holds |
 | --- | --- |
 | `public/sw.js` | Share-target POST intercept. The one genuinely tricky file. |
-| `public/manifest.webmanifest` | `share_target`, `file_handlers` and `launch_handler`. Both MIME types and extensions in `accept`, and `application/octet-stream` besides, or Chrome strips the file and the app is handed a title and nothing else. |
+| `public/manifest.webmanifest` | `share_target`, `file_handlers` and `launch_handler`. The share target accepts every type, and that is load-bearing, not laziness. |
 | `src/share.ts` | Collects the parked file, destructively. |
 | `src/openrouter.ts` | Both API calls, and the models that serve them. |
 | `src/settings.ts` | The API key and the output language. Only what is the user's to choose. |
@@ -28,6 +28,7 @@ The neutral is `taupe-*` and there is no accent hue; the only colours outside th
 - **The audio travels as `multipart/form-data`.** Not base64 in a JSON body. The form takes only `file`, `model`, `language`, `temperature`, `response_format` and `timestamp_granularities`, so a nested `provider` object cannot ride along; provider routing on that call has to go through the model slug. The JSON body does take `provider`, at the cost of base64 growing the upload by a third.
 - **`verbose_json` is a 400, not a shrug.** Endpoints that do not implement it reject the request, and six of the twelve transcription models do. `transcribe()` asks again in plain `json` when the refusal names the format, at the cost of a second upload of the whole file. A default that answers `verbose_json` keeps the duration and the spoken language and spends one upload; changing it means checking which.
 - **The rewrite is the wait, not the transcription.** Measured, on a real message: `docs/benchmarks/2026-08-06-pipeline-latency/`. Reach for that directory before optimising anything in the pipeline, and re-measure rather than reasoning from published throughput figures, which were off by a factor of ten here.
+- **The share target accepts every type, and narrowing it breaks sharing.** WhatsApp offers a voice note to the sheet as a wildcard rather than as audio. Chrome matches the offered type against `accept`, strips what does not match, and navigates anyway, so the app was handed a bare title and no bytes. Measured, not guessed: `sw.js` reported a 240-byte body with one `title` part. `looksLikeAudio` in `src/audio.ts` is what stands in for the narrow list now, and it runs before the first API call.
 - **The share sheet lies about MIME types.** `detectFormat` trusts the filename extension before the reported type, and falls back to `ogg`. Both behaviours are tested.
 - **The origin is fixed.** Changing hostnames forces a reinstall of the PWA.
 - **A voice note arrives by two doors.** The share sheet parks it in a cache for `share.ts` to collect; the file manager hands it to `launchQueue` as a handle. Both end at `run()`, and anything that changes how a message starts has to change both.

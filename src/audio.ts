@@ -45,6 +45,31 @@ export function detectFormat(mimeType: string, filename: string): AudioFormat {
   return 'ogg';
 }
 
+/** Types that identify a file as something a voice note is not. */
+const NOT_AUDIO = ['image/', 'video/', 'text/', 'application/pdf', 'application/zip'];
+
+/**
+ * The share target has to accept every type to be handed anything at all, so the share
+ * sheet now offers every file on the phone. A type that names itself something else is
+ * turned away here rather than at the transcription endpoint, which charges for it.
+ *
+ * Everything ambiguous is let through: `application/octet-stream`, a bare wildcard and an
+ * empty type are all what a WhatsApp voice note arrives as, and the extension settles the rest.
+ */
+export function looksLikeAudio(mimeType: string, filename: string): boolean {
+  const extension = filename.split('.').pop()?.toLowerCase() ?? '';
+  if (BY_EXTENSION[extension]) {
+    return true;
+  }
+
+  const mime = mimeType.toLowerCase();
+  if (mime.startsWith('audio/')) {
+    return true;
+  }
+
+  return !NOT_AUDIO.some((type) => mime.startsWith(type));
+}
+
 const MIME_TYPES: Record<AudioFormat, string> = {
   wav: 'audio/wav',
   mp3: 'audio/mpeg',
